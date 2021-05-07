@@ -71,7 +71,8 @@ function sendStats(){
 
 const serverIp = 'https://gameserver3.tylerbalota.repl.co';
 const serverPort = '3000';
-const local = false;   // true if running locally, false
+const local = false;   
+// true if running locally, false
 // if running on remote server
 
 // Global variables here. ---->
@@ -108,7 +109,7 @@ function draw() {
     for(let en = 0; en < game.enemies.length; en++){
       e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y});
     }
-    sendData('gameState',{players:p,enemies:e,width:game.w,height:game.h});
+    sendData('gameState',{players:p,enemies:e,width:game.w,height:game.h,going:game.going});
   }
   highscore = max(highscore,game.round);
   if(frameCount%120===0){
@@ -122,6 +123,7 @@ function draw() {
     // Update and draw game objects
     game.draw();
 
+    textAlign(LEFT,TOP);
     // Display player IDs in top left corner
     game.printPlayerIds(5, 20);
 
@@ -222,7 +224,7 @@ class Game {
     this.numPlayers = 0;
     this.maxBullets = 50;
     this.numDeaths = 0;
-    this.round = 0;
+    this.round = -1;
     this.id = 0;
     this.colliders = new Group();
     this.ripples = new Ripples();
@@ -291,6 +293,9 @@ class Game {
       this.round = -1;
       enemySpeed = 1/enemySpeedMultiplier;
       this.enemies.removeSprites();
+      for(let k of Object.keys(this.players)){
+        this.players[k].money = 0;
+      }
     }
     if(this.enemies.size()===0){
       this.dead = [];

@@ -102,6 +102,14 @@ function draw() {
       }
     }
   }
+  if(!gamestate.going){
+    fill(0,0,255);
+    rect(gamestate.width/2-40-tx,gamestate.height/2-40-ty,80,80);
+    fill(0);
+    textSize(25);
+    textAlign(CENTER,CENTER);
+    text("Ready",gamestate.width/2-tx,gamestate.height/2-ty);
+  }
   if(gamestate.players){
     for(let key of Object.keys(gamestate.players)){
       if(gamestate.players[key].dead){
@@ -211,7 +219,7 @@ function onReceiveData (data) {
   if (data.type === 'timestamp') {
     print(data.timestamp);
   }else if(data.type === 'gameState'){
-    gamestate = {players:data.players,enemies:data.enemies,width:data.width,height:data.height};
+    gamestate = {players:data.players,enemies:data.enemies,width:data.width,height:data.height,going:data.going};
   }
 
   // <----
