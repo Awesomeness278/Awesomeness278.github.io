@@ -156,6 +156,7 @@ function draw() {
   if(gamestate.enemies){
     fill(255,255,0);
     for(let key of Object.keys(gamestate.enemies)){
+      fill(gamestate.enemies[key].color.levels);
       circle((gamestate.enemies[key].x-tx),(gamestate.enemies[key].y-ty),20);
     }
   }

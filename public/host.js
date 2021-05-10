@@ -40,7 +40,7 @@ let enemySpeed = 1;
 let numDeaths = 0;
 let enemySpeedMultiplier = 1.05;
 let upgrades = [
-  {id:"speed",val:"1.1",desc:"Increases your speed by 10%",cost:"1000",title:"Extra\nSpeed"},
+  {id:"speed",val:"1.3",desc:"Increases your speed by 30%",cost:"1000",title:"Extra\nSpeed"},
   {id:"shot",val:"1",desc:"Shoots an extra bullet forward",cost:"1000",title:"Extra\nShot"},
   {id:"backwardsShot",val:"1",desc:"Shoots an extra bullet backwards",cost:"1000",title:"Backwards\nShot"},
   {id:"angleShot",val:"1",desc:"Shoots an extra bullet forward with an angle",cost:"1000",title:"Angled\nShot"},
@@ -118,7 +118,7 @@ function draw() {
       p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:game.players[k].money,upgradeAmounts:game.players[k].upgradeAmounts}
     }
     for(let en = 0; en < game.enemies.length; en++){
-      e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y});
+      e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y,color:game.enemies[en].shapeColor});
     }
     sendData('gameState',{players:p,enemies:e,width:game.w,height:game.h,going:game.going,upgrades:game.upgrades});
   }
@@ -240,6 +240,13 @@ function processKey(data) {
 // This simple placeholder game makes use of p5.play
 class Game {
   constructor(w, h) {
+    this.enemyTypes = [
+      {hp:1,sp:1,round:0,color:color(0,255,0)},
+      {hp:2,sp:1,round:5,color:color(0,255,255)},
+      {hp:5,sp:1,round:10,color:color(255,255,0)},
+      {hp:10,sp:1,round:25,color:color(255,100,0)},
+      {hp:25,sp:1,round:50,color:color(255,0,0)}
+    ];
     this.w = w;
     this.h = h;
     this.players = {};
@@ -397,6 +404,17 @@ class Game {
           bulletSize:5,
           lives:1
         };
+        this.players[k].upgradeAmounts = [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       }
     }
     if(this.enemies.size()===0){
@@ -427,13 +445,16 @@ class Game {
       if(this.dead.indexOf(keys[i])===-1){
         if (this.players[keys[i]].overlap(this.enemies)&&this.dead.indexOf(keys[i])===-1) {
           if(! this.players[keys[i]].touchingEnemy){
-            this.players[keys[i]].touchingEnemy = true;
+            this.players[keys[i]].touchingEnemy = 2;
             this.players[keys[i]].lives--;
             if(this.players[keys[i]].lives<=0){
               this.dead.push(keys[i]);
               this.players[this.dead[this.dead.length-1]].reviveTimer = 3;
               this.numDeaths++;
             }
+          }else{
+            this.players[keys[i]].touchingEnemy -= deltaTime/1000;
+            this.players[keys[i]].touchingEnemy = max(0,this.players[keys[i]].touchingEnemy);
           }
         }else{
           this.players[keys[i]].touchingEnemy = undefined;
@@ -473,8 +494,8 @@ class Game {
       targetX -= this.enemies[e].position.x;
       targetY -= this.enemies[e].position.y;
       let mult = 1 / sqrt(targetX * targetX + targetY * targetY);
-      targetX *= mult * enemySpeed;
-      targetY *= mult * enemySpeed;
+      targetX *= mult * enemySpeed * this.enemies[e].sp;
+      targetY *= mult * enemySpeed * this.enemies[e].sp;
       if (isNaN(targetX)) {
         targetX = 0;
       }
@@ -569,8 +590,18 @@ class Game {
           }else if(n<2*height+2*width){
             enemy = createSprite(Math.random()*width,height, this.enemySize,this.enemySize);
           }
-          enemy.shapeColor = color(255, 255, 100);
           enemy.bounty = 75;
+          let possibleEnemies = [];
+          for(let t = 0; t < this.enemyTypes.length; t++){
+            if(this.enemyTypes[t].round<=this.round){
+              possibleEnemies.push(this.enemyTypes[t]);
+            }
+          }
+          let amnt = this.enemyAmount/possibleEnemies.length;
+          let enemyI = floor(i/amnt);
+          enemy.hp = possibleEnemies[enemyI].hp;
+          enemy.sp = possibleEnemies[enemyI].sp;
+          enemy.shapeColor = possibleEnemies[enemyI].color;
           this.enemies.add(enemy);
         }
       }
@@ -613,8 +644,11 @@ class Game {
   }
 
   hitEnemy(enemy, bullet) {
-    game.players[bullet.owner].money+=enemy.bounty;
-    enemy.remove();
+    enemy.hp--;
+    if(enemy.hp<=0){
+      game.players[bullet.owner].money+=enemy.bounty;
+      enemy.remove();
+    }
     bullet.remove();
   }
 
