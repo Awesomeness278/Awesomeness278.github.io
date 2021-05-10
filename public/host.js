@@ -39,6 +39,17 @@ let highscore = 0;
 let enemySpeed = 1;
 let numDeaths = 0;
 let enemySpeedMultiplier = 1.05;
+let upgrades = [
+  {id:"speed",val:"1.1",desc:"Increases your speed by 10%",cost:"1000",title:"Extra\nSpeed"},
+  {id:"shot",val:"1",desc:"Shoots an extra bullet forward",cost:"1000",title:"Extra\nShot"},
+  {id:"backwardsShot",val:"1",desc:"Shoots an extra bullet backwards",cost:"1000",title:"Backwards\nShot"},
+  {id:"angleShot",val:"1",desc:"Shoots an extra bullet forward with an angle",cost:"1000",title:"Angled\nShot"},
+  {id:"leftShot",val:"1",desc:"Shoots an extra bullet to the left of where you aim",cost:"1000",title:"Left\nShot"},
+  {id:"rightShot",val:"1",desc:"Shoots an extra bullet to the right of where you aim",cost:"1000",title:"Right\nShot"},
+  {id:"extraLife",val:"1",desc:"Adds an extra life",cost:"1000",title:"Extra\nLife"},
+  {id:"reviveTime",val:"1.1",desc:"Increases the speed at which you revive friends by 10%",cost:"1000",title:"Revive\nSpeed"},
+  {id:"bulletSize",val:"2",desc:"Increases the bullet size by 2px",cost:"1000",title:"Bullet\nSize"}
+]
 
 function updateStats(data){
   if(data){
@@ -104,12 +115,12 @@ function draw() {
     let p = {};
     let e = [];
     for(let k of Object.keys(game.players)){
-      p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:game.players[k].money}
+      p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:game.players[k].money,upgradeAmounts:game.players[k].upgradeAmounts}
     }
     for(let en = 0; en < game.enemies.length; en++){
       e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y});
     }
-    sendData('gameState',{players:p,enemies:e,width:game.w,height:game.h,going:game.going});
+    sendData('gameState',{players:p,enemies:e,width:game.w,height:game.h,going:game.going,upgrades:game.upgrades});
   }
   highscore = max(highscore,game.round);
   if(frameCount%120===0){
@@ -174,8 +185,19 @@ function onReceiveData(data) {
     } else if (data.type === 'name') {
       game.setName(data.id, data.name);
     } else if (data.type === 'shoot') {
-      //hello
-      game.addBullet(data);
+      let player = game.players[data.id];
+      player.bulletsLeft = [
+        player.stats.bulletNumForward,
+        player.stats.bulletNumBackward,
+        player.stats.bulletNumLeft,
+        player.stats.bulletNumRight,
+        player.stats.angledBullets
+      ]
+      game.addBullet(data,"forward");
+      game.addBullet(data,"backward");
+      game.addBullet(data,"left");
+      game.addBullet(data,"right");
+      game.addBullet(data,"angled");
     } else if (data.type === "ping"){
       game.players[data.id].ping = (Date.now() - data.timestamp);
     }
@@ -222,11 +244,10 @@ class Game {
     this.h = h;
     this.players = {};
     this.numPlayers = 0;
-    this.maxBullets = 50;
+    this.maxBullets = 200;
     this.numDeaths = 0;
     this.round = -1;
     this.id = 0;
-    this.colliders = new Group();
     this.ripples = new Ripples();
     this.walls = new Group();
     this.enemies = new Group();
@@ -234,6 +255,7 @@ class Game {
     this.assets = [];
     this.going = false;
     this.dead = [];
+    this.upgrades = [random(upgrades),random(upgrades),random(upgrades)];
     this.enemyAmount = 10;
     this.enemySize = 80 * scale;
     //Put all setup stuff here//
@@ -242,20 +264,58 @@ class Game {
     this.walls.add(createSprite(width + 5, height / 2 + 10, 10, height + 20));
     this.walls.add(createSprite(width / 2 + 10, height + 5, width + 20, 10));
   }
-  addBullet(data) {
+  addBullet(data,type) {
     let id = data.id;
-    if (this.dead.indexOf(id) === -1) {
-      let x = data.aimX + this.players[id].position.x;
-      let y = data.aimY + this.players[id].position.y;
-      let a = atan2(-data.aimY, data.aimX);
-      let bullet = createSprite(x, y, 8, 8);
+    let types = [
+      "forward",
+      "backward",
+      "left",
+      "right",
+      "angled"
+    ]
+    if (this.dead.indexOf(id) === -1 && !this.players[id].touchingEnemy && this.players[id].bulletsLeft[types.indexOf(type)]>0) {
+      let x = data.aimX;
+      let y = data.aimY;
+      if(type == "backward"){
+        x*=-1;
+        y*=-1;
+      }
+      if(type == "right"){
+        let saved = y;
+        y = -1*x;
+        x = saved;
+      }
+      if(type == "left"){
+        let saved = y;
+        y = x;
+        x = -1*saved;
+      }
+      let a = atan2(-y, x);
+      if(type == "angled"){
+        a += random(-PI/18,PI/18);
+        let nx = x*cos(a) - y*sin(a);
+        let ny = x*sin(a) + y*cos(a);
+        x = nx;
+        y = ny;
+      }
+      x+=this.players[id].position.x;
+      y+=this.players[id].position.y;
+      let bullet = createSprite(x, y, this.players[id].stats.bulletSize, this.players[id].stats.bulletSize);
       bullet.shapeColor = color(0,0,0);
       bullet.velocity.x = 5 * cos(a);
       bullet.velocity.y = 5 * sin(a);
       bullet.owner = id;
       this.bullets.add(bullet);
       if(this.bullets.length > this.maxBullets){
-        this.bullets.remove(this.bullets[0]);
+        this.bullets[0].remove();
+      }
+      this.players[id].bulletsLeft[types.indexOf(type)]--;
+      if(this.players[id].bulletsLeft[types.indexOf(type)]>0){
+        if(type==="angled"){
+          game.addBullet(data,type)
+        }else{
+          setTimeout(()=>(game.addBullet(data,type)),100);
+        }
       }
     }
   }
@@ -270,6 +330,37 @@ class Game {
     this.players[id].name = "";
     this.players[id].money = 0;
     this.players[id].ready = false;
+    this.players[id].lives = 1;
+    this.players[id].upgradeTimer = 3;
+    this.players[id].bulletsLeft = [
+      1,
+      0,
+      0,
+      0,
+      0
+    ]
+    this.players[id].stats = {
+      speed:1,
+      bulletNumForward:1,
+      bulletNumBackward:0,
+      bulletNumLeft:0,
+      bulletNumRight:0,
+      angledBullets:0,
+      reviveTime:1,
+      bulletSize:5,
+      lives:1
+    };
+    this.players[id].upgradeAmounts = [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
     this.players[id].draw = function() {
       fill(this.shapeColor);
       ellipseMode(CENTER);
@@ -281,9 +372,9 @@ class Game {
     }
     if(this.going){
       this.dead.push(id);
+      this.players[id].lives = 0;
     }
     this.players[id].ping = 0;
-    this.colliders.add(this.players[id]);
     this.id++;
     this.numPlayers++;
   }
@@ -295,10 +386,27 @@ class Game {
       this.enemies.removeSprites();
       for(let k of Object.keys(this.players)){
         this.players[k].money = 0;
+        this.players[k].stats = {
+          speed:1,
+          bulletNumForward:1,
+          bulletNumBackward:0,
+          bulletNumLeft:0,
+          bulletNumRight:0,
+          angledBullets:0,
+          reviveTime:1,
+          bulletSize:5,
+          lives:1
+        };
       }
     }
     if(this.enemies.size()===0){
       this.dead = [];
+      for(let k of Object.keys(this.players)){
+        this.players[k].lives = this.players[k].stats.lives;
+      }
+      if(this.going){
+        this.upgrades = [random(upgrades),random(upgrades),random(upgrades)];
+      }
       this.going = false;
     }
     background('green');
@@ -317,10 +425,18 @@ class Game {
     let keys = Object.keys(this.players);
     for (let i = 0; i < keys.length; i++) {
       if(this.dead.indexOf(keys[i])===-1){
-        if (this.players[keys[i]].collide(this.enemies)&&this.dead.indexOf(keys[i])===-1) {
-          this.dead.push(keys[i]);
-          this.players[this.dead[this.dead.length-1]].reviveTimer = 3;
-          this.numDeaths++;
+        if (this.players[keys[i]].overlap(this.enemies)&&this.dead.indexOf(keys[i])===-1) {
+          if(! this.players[keys[i]].touchingEnemy){
+            this.players[keys[i]].touchingEnemy = true;
+            this.players[keys[i]].lives--;
+            if(this.players[keys[i]].lives<=0){
+              this.dead.push(keys[i]);
+              this.players[this.dead[this.dead.length-1]].reviveTimer = 3;
+              this.numDeaths++;
+            }
+          }
+        }else{
+          this.players[keys[i]].touchingEnemy = undefined;
         }
       }
       this.players[keys[i]].collide(this.walls);
@@ -330,7 +446,7 @@ class Game {
       for(let p of Object.keys(this.players)){
         if(p!==this.dead[d]){
           if(this.players[p].overlap(this.players[this.dead[d]])){
-            this.players[this.dead[d]].reviveTimer -= deltaTime/1000;
+            this.players[this.dead[d]].reviveTimer -= this.players[p].stats.reviveTime*deltaTime/1000;
             if(this.players[this.dead[d]].reviveTimer <= 0){
               this.dead.splice(d,1);
               if(this.players[this.dead[d]]){
@@ -377,7 +493,11 @@ class Game {
         }
       }
     }
-    this.walls.overlap(this.bullets, this.hitWall);
+    for(let w = 0; w < this.walls.length; w++){
+      for(let b = 0; b < this.bullets.length; b++){
+        this.walls[w].overlap(this.bullets[b],this.hitWall);
+      }
+    }
     this.enemies.displace(this.enemies);
     this.enemies.collide(this.walls);
     this.checkBounds();
@@ -385,10 +505,18 @@ class Game {
       noStroke();
       fill(0,255,0);
       rect(width/2-40,height/2-40,80,80);
+      fill(150,120,0);
+      rect(width/2+50,height/2+50,80,80);
+      rect(width/2-40,height/2+50,80,80);
+      rect(width/2-130,height/2+50,80,80);
       fill(0);
       textSize(25);
       textAlign(CENTER,CENTER);
       text("Ready",width/2,height/2);
+      textSize(15);
+      text(this.upgrades[2].title,width/2-90,height/2+90);
+      text(this.upgrades[1].title,width/2,height/2+90);
+      text(this.upgrades[0].title,width/2+90,height/2+90);
       let start = true;
       for(let k of Object.keys(this.players)){
         let x = this.players[k].position.x;
@@ -398,6 +526,28 @@ class Game {
         }else{
           this.players[k].ready = false;
         }
+        if(y>height/2+50&&y<height/2+130){
+          if(x>width/2+50&&x<width/2+130){
+            this.players[k].upgradeTimer-=deltaTime/1000;
+            if(this.players[k].upgradeTimer<=0){
+              this.getUpgrade(k,this.upgrades[0].id,this.upgrades[0].val,this.upgrades[0].cost,0,upgrades.indexOf(this.upgrades[0]));
+            }
+          }else if(x>width/2-40&&x<width/2+40){
+            this.players[k].upgradeTimer-=deltaTime/1000;
+            if(this.players[k].upgradeTimer<=0){
+              this.getUpgrade(k,this.upgrades[1].id,this.upgrades[1].val,this.upgrades[1].cost,1,upgrades.indexOf(this.upgrades[1]));
+            }
+          }else if(x>width/2-130&&x<width/2-50){
+            this.players[k].upgradeTimer-=deltaTime/1000;
+            if(this.players[k].upgradeTimer<=0){
+              this.getUpgrade(k,this.upgrades[2].id,this.upgrades[2].val,this.upgrades[2].cost,2,upgrades.indexOf(this.upgrades[2]));
+            }
+          }else{
+            this.players[k].upgradeTimer = 3;
+          }
+        }else{
+          this.players[k].upgradeTimer = 3;
+        }
         if(!this.players[k].ready){
           start = false;
         }
@@ -405,7 +555,7 @@ class Game {
       if(start && Object.keys(this.players).length>0){
         this.going = true;
         this.round++;
-        enemySpeed*=enemySpeedMultiplier;
+        enemySpeed = pow(enemySpeedMultiplier,this.round);
         this.enemyAmount = 10+this.round*2;
         for (let i = 0; i < this.enemyAmount; i++) {
           let n = random(width*2+height*2);
@@ -420,6 +570,7 @@ class Game {
             enemy = createSprite(Math.random()*width,height, this.enemySize,this.enemySize);
           }
           enemy.shapeColor = color(255, 255, 100);
+          enemy.bounty = 75;
           this.enemies.add(enemy);
         }
       }
@@ -430,9 +581,40 @@ class Game {
     drawSprites();
   }
 
+  getUpgrade(playerID,upgradeID,upgradeValue,upgradeCost,upgradeIndex,upgradeListIndex){
+    upgradeValue*=1;
+    let player = this.players[playerID];
+    if(player.money>=upgradeCost*pow(4,player.upgradeAmounts[upgradeListIndex])){
+      player.money-=upgradeCost*pow(4,player.upgradeAmounts[upgradeListIndex]);
+      player.upgradeAmounts[upgradeListIndex]++;
+      if(upgradeID==undefined){
+        return;
+      }else if(upgradeID==="speed"){
+        player.stats.speed*=upgradeValue;
+      }else if(upgradeID==="extraLife"){
+        player.stats.lives+=upgradeValue;
+      }else if(upgradeID==="bulletSize"){
+        player.stats.bulletSize+=upgradeValue;
+      }else if(upgradeID==="backwardsShot"){
+        player.stats.bulletNumBackward+=upgradeValue;
+      }else if(upgradeID==="shot"){
+        player.stats.bulletNumForward+=upgradeValue;
+      }else if(upgradeID==="leftShot"){
+        player.stats.bulletNumLeft+=upgradeValue;
+      }else if(upgradeID==="rightShot"){
+        player.stats.bulletNumRight+=upgradeValue;
+      }else if(upgradeID==="angleShot"){
+        player.stats.angledBullets+=upgradeValue;
+      }else if(upgradeID==="reviveTime"){
+        player.stats.reviveTime*=upgradeValue;
+      }
+      this.upgrades[upgradeIndex] = {title:"Empty",cost:0,id:undefined}
+    }
+  }
+
   hitEnemy(enemy, bullet) {
+    game.players[bullet.owner].money+=enemy.bounty;
     enemy.remove();
-    game.players[bullet.owner].money+=Math.round(Math.sqrt(game.round)*100)+100;
     bullet.remove();
   }
 
@@ -461,7 +643,6 @@ class Game {
   }
 
   remove(id) {
-    this.colliders.remove(this.players[id]);
     this.players[id].remove();
     if(this.dead.indexOf(id)!==-1){
       this.dead.splice(this.dead.indexOf(id),1);
@@ -497,8 +678,8 @@ class Game {
       this.players[id].velocity.x = 0;
       this.players[id].velocity.y = 0;
     } else {
-      this.players[id].velocity.x = velx * scale;
-      this.players[id].velocity.y = vely * scale;
+      this.players[id].velocity.x = velx * scale * this.players[id].stats.speed;
+      this.players[id].velocity.y = vely * scale * this.players[id].stats.speed;
     }
   }
 

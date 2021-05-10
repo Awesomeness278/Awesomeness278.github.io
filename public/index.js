@@ -85,6 +85,18 @@ function windowResized() {
 
 let ePressed = false;
 let money = 0;
+let upgradeAmounts = [];
+let upgradeIds = [
+  "speed",
+  "shot",
+  "backwardsShot",
+  "angleShot",
+  "leftShot",
+  "rightShot",
+  "extraLife",
+  "reviveTime",
+  "bulletSize"
+]
 
 function draw() {
   background(0);
@@ -99,16 +111,37 @@ function draw() {
         tx = gamestate.players[key].x;
         ty = gamestate.players[key].y;
         money = gamestate.players[key].money;
+        upgradeAmounts = gamestate.players[key].upgradeAmounts;
       }
     }
   }
-  if(!gamestate.going){
+  if(gamestate.going===false){
     fill(0,0,255);
     rect(gamestate.width/2-40-tx,gamestate.height/2-40-ty,80,80);
+    rect(gamestate.width/2-130-tx,gamestate.height/2+50-ty,80,80);
+    rect(gamestate.width/2-40-tx,gamestate.height/2+50-ty,80,80);
+    rect(gamestate.width/2+50-tx,gamestate.height/2+50-ty,80,80);
     fill(0);
     textSize(25);
     textAlign(CENTER,CENTER);
     text("Ready",gamestate.width/2-tx,gamestate.height/2-ty);
+    textSize(15);
+    text(gamestate.upgrades[2].title,gamestate.width/2-90-tx,gamestate.height/2+90-ty);
+    text(gamestate.upgrades[1].title,gamestate.width/2-tx,gamestate.height/2+90-ty);
+    text(gamestate.upgrades[0].title,gamestate.width/2+90-tx,gamestate.height/2+90-ty);
+    let upgrade0Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[0].id)];
+    let upgrade1Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[1].id)];
+    let upgrade2Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[2].id)];
+    textSize(10);
+    if(!isNaN(upgrade0Amount)){
+      text("$"+1000*pow(4,upgrade0Amount),gamestate.width/2+90-tx,gamestate.height/2+110-ty);
+    }
+    if(!isNaN(upgrade1Amount)){
+      text("$"+1000*pow(4,upgrade1Amount),gamestate.width/2-tx,gamestate.height/2+110-ty);
+    }
+    if(!isNaN(upgrade2Amount)){
+      text("$"+1000*pow(4,upgrade2Amount),gamestate.width/2-90-tx,gamestate.height/2+110-ty);
+    }
   }
   if(gamestate.players){
     for(let key of Object.keys(gamestate.players)){
@@ -141,8 +174,8 @@ function draw() {
   if(isClientConnected(display=true)) {
     // Client draw here. ---->
     fill(255);
-    textAlign(RIGHT,BOTTOM);
-    text("Money: "+money,width,height);
+    textAlign(CENTER,BOTTOM);
+    text("Money: "+money,width/2,height);
     drawGui();
 
     // <---
@@ -219,7 +252,7 @@ function onReceiveData (data) {
   if (data.type === 'timestamp') {
     print(data.timestamp);
   }else if(data.type === 'gameState'){
-    gamestate = {players:data.players,enemies:data.enemies,width:data.width,height:data.height,going:data.going};
+    gamestate = {players:data.players,enemies:data.enemies,width:data.width,height:data.height,going:data.going,upgrades:data.upgrades};
   }
 
   // <----
