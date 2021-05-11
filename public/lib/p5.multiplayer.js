@@ -88,10 +88,10 @@ function onHostConnect (data) {
 }
 
 // Displays server address in lower left of screen
-function displayAddress() {
+function displayAddress(m) {
   push();
   fill(255);
-  textSize(20);
+  textSize(20*m);
   textAlign(CENTER,TOP);
   text("Go to https://rb.gy/h1low3 and enter room code: "+roomId+". Case matters.", width/2, 0);
   pop();

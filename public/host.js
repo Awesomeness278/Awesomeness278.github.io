@@ -26,6 +26,7 @@ var firebaseConfig = {
   appId: "1:821012624219:web:72e8a4acb9d2bead11e07e",
   measurementId: "G-32YV6L2GS3"
 };
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 firebase.analytics();
@@ -59,24 +60,33 @@ function updateStats(data){
         numPlayers = 0;
         numRooms = 0;
         let keys = Object.keys(items);
-        for(key of keys){
-          numPlayers+=items[key].numPlayers;
-          numRooms+=1;
-          highscore = max(highscore,items[key].highscore);
-          numDeaths = items[key].numDeaths;
-        }
+        let key = "gameStats"
+        numPlayers+=items[key].numPlayers;
+        numRooms+=1;
+        highscore = max(highscore,items[key].highscore);
+        numDeaths = items[key].numDeaths;
       }
     }
   }
 }
 
 function sendStats(){
-  let data = {
-    highscore:highscore,
-    numDeaths:numDeaths+game.numDeaths
+  if(!isNaN(highscore)&&highscore!==undefined&&!isNaN(numDeaths+game.numDeaths)&&numDeaths+game.numDeaths!==undefined){
+    let data = {
+      highscore:highscore,
+      numDeaths:numDeaths+game.numDeaths
+    }
+    game.numDeaths = 0;
+    let r = database.ref("stats/gameStats");
+    r.set(data);
   }
-  game.numDeaths = 0;
-  let r = database.ref("stats/gameStats");
+}
+
+function sendTimestamp(key){
+  let r = database.ref("stats/"+key);
+  let data = {
+    timestamp:Date.now()
+  }
   r.set(data);
 }
 
@@ -99,8 +109,17 @@ function preload() {
   setupHost();
 }
 
+let w = 1366;
+let h = w/16 * 9;
+let mult = 1/h;
+
 function setup() {
-  createCanvas(windowWidth, windowHeight - 5);
+  if(windowWidth/16*9<windowHeight){
+    createCanvas(windowWidth, windowWidth/16*9);
+  }else{
+    createCanvas(windowHeight/9*16,windowHeight);
+  }
+  mult*=height;
 
   // Host/Game setup here. ---->
 
@@ -111,20 +130,28 @@ function setup() {
 }
 
 function draw() {
+  if(isNaN(highscore)){
+    noLoop();
+  }
   if(frameCount%3===0){
     let p = {};
     let e = [];
+    let b = [];
     for(let k of Object.keys(game.players)){
       p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:game.players[k].money,upgradeAmounts:game.players[k].upgradeAmounts}
     }
     for(let en = 0; en < game.enemies.length; en++){
       e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y,color:game.enemies[en].shapeColor});
     }
-    sendData('gameState',{players:p,enemies:e,width:game.w,height:game.h,going:game.going,upgrades:game.upgrades});
+    for(let bul = 0; bul < game.bullets.length; bul++){
+      b.push({x:game.bullets[bul].position.x,y:game.bullets[bul].position.y,w:game.bullets[bul].width,h:game.bullets[bul].height});
+    }
+    sendData('gameState',{players:p,enemies:e,bullets:b,width:game.w,height:game.h,going:game.going,upgrades:game.upgrades,mult:mult,round:game.round,el:game.enemies.size()});
   }
   highscore = max(highscore,game.round);
-  if(frameCount%120===0){
+  if(frameCount%120===119){
     sendStats();
+    sendTimestamp(k);
   }
   background(15);
 
@@ -141,7 +168,7 @@ function draw() {
     // <----
 
     // Display server address
-    displayAddress();
+    displayAddress(mult);
   }
 }
 
@@ -152,7 +179,7 @@ function onClientConnect(data) {
     game.add(data.id,
       random(0.25 * width, 0.75 * width),
       random(0.25 * height, 0.75 * height),
-      60 * scale, 60 * scale
+      60 * scale * mult, 60 * scale * mult
     );
   }
 
@@ -174,11 +201,9 @@ function onReceiveData(data) {
   if(game.players[data.id]){
     if (data.type === 'joystick') {
       processJoystick(data);
-    }
-    else if (data.type === 'button') {
+    } else if (data.type === 'button') {
       processButton(data);
-    }
-    else if (data.type === 'playerColor') {
+    } else if (data.type === 'playerColor') {
       game.setColor(data.id, data.r, data.g, data.b);
     } else if (data.type === 'key') {
       processKey(data);
@@ -223,7 +248,7 @@ function mousePressed() {
 // Input processing
 function processJoystick(data) {
 
-  game.setVelocity(data.id, data.joystickX * velScale, -data.joystickY * velScale);
+  game.setVelocity(data.id, data.joystickX * velScale * mult, -data.joystickY * velScale * mult);
 }
 
 function processButton(data) {
@@ -232,7 +257,7 @@ function processButton(data) {
 }
 
 function processKey(data) {
-  game.setVelocity(data.id, data.x * velScale / 2, data.y * velScale / 2);
+  game.setVelocity(data.id, data.x * velScale / 2 * mult, data.y * velScale / 2 * mult);
 }
 
 ////////////
@@ -242,10 +267,10 @@ class Game {
   constructor(w, h) {
     this.enemyTypes = [
       {hp:1,sp:1,round:0,color:color(0,255,0)},
-      {hp:2,sp:1,round:5,color:color(0,255,255)},
-      {hp:5,sp:1,round:10,color:color(255,255,0)},
-      {hp:10,sp:1,round:25,color:color(255,100,0)},
-      {hp:25,sp:1,round:50,color:color(255,0,0)}
+      {hp:5,sp:1,round:5,color:color(0,255,255)},
+      {hp:10,sp:1,round:10,color:color(255,255,0)},
+      {hp:25,sp:1,round:25,color:color(255,100,0)},
+      {hp:50,sp:1,round:50,color:color(255,0,0)}
     ];
     this.w = w;
     this.h = h;
@@ -280,7 +305,7 @@ class Game {
       "right",
       "angled"
     ]
-    if (this.dead.indexOf(id) === -1 && !this.players[id].touchingEnemy && this.players[id].bulletsLeft[types.indexOf(type)]>0) {
+    if (this.dead.indexOf(id) === -1 && this.players[id].bulletsLeft[types.indexOf(type)]>0) {
       let x = data.aimX;
       let y = data.aimY;
       if(type == "backward"){
@@ -305,12 +330,14 @@ class Game {
         x = nx;
         y = ny;
       }
+      x*=mult;
+      y*=mult;
       x+=this.players[id].position.x;
       y+=this.players[id].position.y;
-      let bullet = createSprite(x, y, this.players[id].stats.bulletSize, this.players[id].stats.bulletSize);
+      let bullet = createSprite(x, y, this.players[id].stats.bulletSize*mult, this.players[id].stats.bulletSize*mult);
       bullet.shapeColor = color(0,0,0);
-      bullet.velocity.x = 5 * cos(a);
-      bullet.velocity.y = 5 * sin(a);
+      bullet.velocity.x = 5 * cos(a) * mult;
+      bullet.velocity.y = 5 * sin(a) * mult;
       bullet.owner = id;
       this.bullets.add(bullet);
       if(this.bullets.length > this.maxBullets){
@@ -327,9 +354,9 @@ class Game {
     }
   }
   add(id, x, y, w, h) {
-    this.players[id] = createSprite(x, y, w, h);
+    this.players[id] = createSprite(x*mult, y*mult, w*mult, h*mult);
     this.players[id].id = "p" + this.id;
-    this.players[id].setCollider("rectangle", 0, 0, w, h);
+    this.players[id].setCollider("rectangle", 0, 0, w*mult, h*mult);
     this.players[id].color = color(255, 255, 255);
     this.players[id].shapeColor = color(255, 255, 255);
     this.players[id].scale = 1;
@@ -355,7 +382,7 @@ class Game {
       angledBullets:0,
       reviveTime:1,
       bulletSize:5,
-      lives:1
+      lives:1,
     };
     this.players[id].upgradeAmounts = [
       0,
@@ -373,7 +400,7 @@ class Game {
       ellipseMode(CENTER);
       ellipse(0, 0, this.width, this.height);
       fill(0);
-      textSize(20);
+      textSize(20*mult);
       textAlign(CENTER,BOTTOM)
       text(this.name,0,-this.height/2);
     }
@@ -433,11 +460,11 @@ class Game {
     rect(width / 2, height / 2, width * 0.93, height * 0.9);
     rectMode(CORNER);
     fill(255);
-    textSize(30);
+    textSize(30*mult);
     textAlign(CENTER,CENTER);
-    text("Round: "+this.round+", Enemies Left: "+this.enemies.size(),width/2,height-20);
+    text("Round: "+this.round+", Enemies Left: "+this.enemies.size(),width/2,height-20*mult);
     textAlign(RIGHT,TOP);
-    textSize(10);
+    textSize(10*mult);
     text("Current Global Highscore: "+highscore+"\nCurrent Global Death Count: "+numDeaths,width,0)
     textAlign(LEFT,TOP);
     let keys = Object.keys(this.players);
@@ -493,9 +520,9 @@ class Game {
       }
       targetX -= this.enemies[e].position.x;
       targetY -= this.enemies[e].position.y;
-      let mult = 1 / sqrt(targetX * targetX + targetY * targetY);
-      targetX *= mult * enemySpeed * this.enemies[e].sp;
-      targetY *= mult * enemySpeed * this.enemies[e].sp;
+      let spd = mult / sqrt(targetX * targetX + targetY * targetY);
+      targetX *= spd * enemySpeed * this.enemies[e].sp;
+      targetY *= spd * enemySpeed * this.enemies[e].sp;
       if (isNaN(targetX)) {
         targetX = 0;
       }
@@ -525,40 +552,40 @@ class Game {
     if(!this.going){
       noStroke();
       fill(0,255,0);
-      rect(width/2-40,height/2-40,80,80);
+      rect(width/2-40*mult,height/2-40*mult,80*mult,80*mult);
       fill(150,120,0);
-      rect(width/2+50,height/2+50,80,80);
-      rect(width/2-40,height/2+50,80,80);
-      rect(width/2-130,height/2+50,80,80);
+      rect(width/2+50*mult,height/2+50*mult,80*mult,80*mult);
+      rect(width/2-40*mult,height/2+50*mult,80*mult,80*mult);
+      rect(width/2-130*mult,height/2+50*mult,80*mult,80*mult);
       fill(0);
-      textSize(25);
+      textSize(25*mult);
       textAlign(CENTER,CENTER);
       text("Ready",width/2,height/2);
-      textSize(15);
-      text(this.upgrades[2].title,width/2-90,height/2+90);
-      text(this.upgrades[1].title,width/2,height/2+90);
-      text(this.upgrades[0].title,width/2+90,height/2+90);
+      textSize(15*mult);
+      text(this.upgrades[2].title,width/2-90*mult,height/2+90*mult);
+      text(this.upgrades[1].title,width/2,height/2+90*mult);
+      text(this.upgrades[0].title,width/2+90*mult,height/2+90*mult);
       let start = true;
       for(let k of Object.keys(this.players)){
         let x = this.players[k].position.x;
         let y = this.players[k].position.y;
-        if(x>width/2-40&&x<width/2+40&&y>height/2-40&&y<height/2+40){
+        if(x>width/2-40*mult&&x<width/2+40*mult&&y>height/2-40*mult&&y<height/2+40*mult){
           this.players[k].ready = true;
         }else{
           this.players[k].ready = false;
         }
-        if(y>height/2+50&&y<height/2+130){
-          if(x>width/2+50&&x<width/2+130){
+        if(y>height/2+50*mult&&y<height/2+130*mult){
+          if(x>width/2+50*mult&&x<width/2+130*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
               this.getUpgrade(k,this.upgrades[0].id,this.upgrades[0].val,this.upgrades[0].cost,0,upgrades.indexOf(this.upgrades[0]));
             }
-          }else if(x>width/2-40&&x<width/2+40){
+          }else if(x>width/2-40*mult&&x<width/2+40*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
               this.getUpgrade(k,this.upgrades[1].id,this.upgrades[1].val,this.upgrades[1].cost,1,upgrades.indexOf(this.upgrades[1]));
             }
-          }else if(x>width/2-130&&x<width/2-50){
+          }else if(x>width/2-130*mult&&x<width/2-50*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
               this.getUpgrade(k,this.upgrades[2].id,this.upgrades[2].val,this.upgrades[2].cost,2,upgrades.indexOf(this.upgrades[2]));
@@ -582,13 +609,13 @@ class Game {
           let n = random(width*2+height*2);
           let enemy;
           if(n<height){
-            enemy = createSprite(0,Math.random() * height, this.enemySize,this.enemySize);
+            enemy = createSprite(0,Math.random() * height, this.enemySize*mult,this.enemySize*mult);
           }else if(n<height+width){
-            enemy = createSprite(Math.random() * width,0, this.enemySize,this.enemySize);
+            enemy = createSprite(Math.random() * width,0, this.enemySize*mult,this.enemySize*mult);
           }else if(n<2*height+width){
-            enemy = createSprite(width,Math.random() * height, this.enemySize,this.enemySize);
+            enemy = createSprite(width,Math.random() * height, this.enemySize*mult,this.enemySize*mult);
           }else if(n<2*height+2*width){
-            enemy = createSprite(Math.random()*width,height, this.enemySize,this.enemySize);
+            enemy = createSprite(Math.random()*width,height, this.enemySize*mult,this.enemySize*mult);
           }
           enemy.bounty = 75;
           let possibleEnemies = [];
@@ -694,7 +721,7 @@ class Game {
     push();
     noStroke();
     fill(255);
-    textSize(16);
+    textSize(16*mult);
     text("# players: " + this.numPlayers, x, y);
 
     y = y + 16;

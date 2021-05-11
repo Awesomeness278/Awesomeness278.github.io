@@ -2,3 +2,6 @@ node_modules
 
 # Cert/Key Files
 *.pem
+
+# TODO
+TODO.txt

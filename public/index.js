@@ -38,6 +38,8 @@ let joystickRes = 4;
 let thisJ       = {x: 0, y: 0};
 let prevJ       = {x: 0, y: 0};
 let gamestate   = {};
+let w = 600;
+let gsMult = 1/w;
 
 // Initialize Game related variables
 let playerColor;
@@ -51,13 +53,14 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-
+  
   // Client setup here. ---->
   
   gui = createGui();
 
   setPlayerColors();
   setupUI();
+  gsMult*=jW;
 
   // <----
 
@@ -104,12 +107,15 @@ function draw() {
   let ty = 0;
   noStroke();
   push();
+  if(gamestate.mult){
+    invMult = 1/gamestate.mult;
+  }
   translate(width-jX-jW/2,jY+jH/2);
   if(gamestate.players){
     for(let key of Object.keys(gamestate.players)){
       if(gamestate.players[key].name===playerName){
-        tx = gamestate.players[key].x;
-        ty = gamestate.players[key].y;
+        tx = gamestate.players[key].x*invMult*gsMult;
+        ty = gamestate.players[key].y*invMult*gsMult;
         money = gamestate.players[key].money;
         upgradeAmounts = gamestate.players[key].upgradeAmounts;
       }
@@ -117,30 +123,30 @@ function draw() {
   }
   if(gamestate.going===false){
     fill(0,0,255);
-    rect(gamestate.width/2-40-tx,gamestate.height/2-40-ty,80,80);
-    rect(gamestate.width/2-130-tx,gamestate.height/2+50-ty,80,80);
-    rect(gamestate.width/2-40-tx,gamestate.height/2+50-ty,80,80);
-    rect(gamestate.width/2+50-tx,gamestate.height/2+50-ty,80,80);
+    rect(gamestate.width/2-40*gsMult-tx,gamestate.height/2-40*gsMult-ty,80*gsMult,80*gsMult);
+    rect(gamestate.width/2-130*gsMult-tx,gamestate.height/2+50*gsMult-ty,80*gsMult,80*gsMult);
+    rect(gamestate.width/2-40*gsMult-tx,gamestate.height/2+50*gsMult-ty,80*gsMult,80*gsMult);
+    rect(gamestate.width/2+50*gsMult-tx,gamestate.height/2+50*gsMult-ty,80*gsMult,80*gsMult);
     fill(0);
-    textSize(25);
+    textSize(25*gsMult);
     textAlign(CENTER,CENTER);
     text("Ready",gamestate.width/2-tx,gamestate.height/2-ty);
-    textSize(15);
-    text(gamestate.upgrades[2].title,gamestate.width/2-90-tx,gamestate.height/2+90-ty);
-    text(gamestate.upgrades[1].title,gamestate.width/2-tx,gamestate.height/2+90-ty);
-    text(gamestate.upgrades[0].title,gamestate.width/2+90-tx,gamestate.height/2+90-ty);
+    textSize(15*gsMult);
+    text(gamestate.upgrades[2].title,gamestate.width/2-90*gsMult-tx,gamestate.height/2+90*gsMult-ty);
+    text(gamestate.upgrades[1].title,gamestate.width/2-tx,gamestate.height/2+90*gsMult-ty);
+    text(gamestate.upgrades[0].title,gamestate.width/2+90*gsMult-tx,gamestate.height/2+90*gsMult-ty);
     let upgrade0Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[0].id)];
     let upgrade1Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[1].id)];
     let upgrade2Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[2].id)];
-    textSize(10);
+    textSize(10*gsMult);
     if(!isNaN(upgrade0Amount)){
-      text("$"+1000*pow(4,upgrade0Amount),gamestate.width/2+90-tx,gamestate.height/2+110-ty);
+      text("$"+1000*pow(4,upgrade0Amount),gamestate.width/2+90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
     }
     if(!isNaN(upgrade1Amount)){
-      text("$"+1000*pow(4,upgrade1Amount),gamestate.width/2-tx,gamestate.height/2+110-ty);
+      text("$"+1000*pow(4,upgrade1Amount),gamestate.width/2-tx,gamestate.height/2+110*gsMult-ty);
     }
     if(!isNaN(upgrade2Amount)){
-      text("$"+1000*pow(4,upgrade2Amount),gamestate.width/2-90-tx,gamestate.height/2+110-ty);
+      text("$"+1000*pow(4,upgrade2Amount),gamestate.width/2-90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
     }
   }
   if(gamestate.players){
@@ -150,14 +156,20 @@ function draw() {
       }else{
         fill(0,255,0);
       }
-      circle((gamestate.players[key].x-tx),(gamestate.players[key].y-ty),15);
+      circle((gamestate.players[key].x*invMult*gsMult-tx),(gamestate.players[key].y*invMult*gsMult-ty),15*gsMult);
     }
   }
   if(gamestate.enemies){
     fill(255,255,0);
     for(let key of Object.keys(gamestate.enemies)){
       fill(gamestate.enemies[key].color.levels);
-      circle((gamestate.enemies[key].x-tx),(gamestate.enemies[key].y-ty),20);
+      circle((gamestate.enemies[key].x*invMult*gsMult-tx),(gamestate.enemies[key].y*invMult*gsMult-ty),20*gsMult);
+    }
+  }
+  if(gamestate.bullets){
+    fill(255);
+    for(let key of Object.keys(gamestate.bullets)){
+      circle((gamestate.bullets[key].x*invMult*gsMult-tx),(gamestate.bullets[key].y*invMult*gsMult-ty),gamestate.bullets[key].w*invMult*gsMult);
     }
   }
   stroke(255);
@@ -177,6 +189,8 @@ function draw() {
     fill(255);
     textAlign(CENTER,BOTTOM);
     text("Money: "+money,width/2,height);
+    textAlign(CENTER,TOP);
+    text("Round: "+round+", Enemies Left: "+left,width/2,0);
     drawGui();
 
     // <---
@@ -232,8 +246,8 @@ function draw() {
       fill(playerColorDim);
       circle(width-jX-jW+jW/2+rmx,jY+jH/2+rmy,20);
       if(mouseIsPressed&&!mousePressed){
-        let mult = 1/sqrt(rmx*rmx+rmy*rmy)
-        let data = {aimX:rmx*mult,aimY:-rmy*mult};
+        let mlt = 1/sqrt(rmx*rmx+rmy*rmy);
+        let data = {aimX:rmx*mlt,aimY:-rmy*mlt};
         sendData('shoot',data);
         mousePressed = true;
       }
@@ -245,6 +259,9 @@ function draw() {
 }
 
 let mousePressed = false;
+let invMult;
+let round;
+let left;
 
 // Messages can be sent from a host to all connected clients
 function onReceiveData (data) {
@@ -253,7 +270,9 @@ function onReceiveData (data) {
   if (data.type === 'timestamp') {
     print(data.timestamp);
   }else if(data.type === 'gameState'){
-    gamestate = {players:data.players,enemies:data.enemies,width:data.width,height:data.height,going:data.going,upgrades:data.upgrades};
+    gamestate = {players:data.players,bullets:data.bullets,enemies:data.enemies,width:data.width*invMult*gsMult,height:data.height*invMult*gsMult,going:data.going,upgrades:data.upgrades,mult:data.mult,round:data.round,left:data.el};
+    left = gamestate.left;
+    round = gamestate.round;
   }
 
   // <----
