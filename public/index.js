@@ -161,15 +161,15 @@ function draw() {
   }
   if(gamestate.enemies){
     fill(255,255,0);
-    for(let key of Object.keys(gamestate.enemies)){
-      fill(gamestate.enemies[key].color.levels);
-      circle((gamestate.enemies[key].x*invMult*gsMult-tx),(gamestate.enemies[key].y*invMult*gsMult-ty),20*gsMult);
+    for(let i = 0; i < gamestate.enemies.length; i++){
+      fill(gamestate.enemies[i].color.levels);
+      circle((gamestate.enemies[i].x*invMult*gsMult-tx),(gamestate.enemies[i].y*invMult*gsMult-ty),20*gsMult);
     }
   }
   if(gamestate.bullets){
     fill(255);
-    for(let key of Object.keys(gamestate.bullets)){
-      circle((gamestate.bullets[key].x*invMult*gsMult-tx),(gamestate.bullets[key].y*invMult*gsMult-ty),gamestate.bullets[key].w*invMult*gsMult);
+    for(let i = 0; i < gamestate.bullets.length; i++){
+      circle((gamestate.bullets[i].x*invMult*gsMult-tx),(gamestate.bullets[i].y*invMult*gsMult-ty),gamestate.bullets[i].w*invMult*gsMult);
     }
   }
   stroke(255);
