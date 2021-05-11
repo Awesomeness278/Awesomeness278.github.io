@@ -609,13 +609,13 @@ class Game {
           let n = random(width*2+height*2);
           let enemy;
           if(n<height){
-            enemy = createSprite(0,Math.random() * height, this.enemySize*mult,this.enemySize*mult);
+            enemy = createSprite(20*mult,Math.random() * height, this.enemySize*mult,this.enemySize*mult);
           }else if(n<height+width){
-            enemy = createSprite(Math.random() * width,0, this.enemySize*mult,this.enemySize*mult);
+            enemy = createSprite(Math.random() * width,20*mult, this.enemySize*mult,this.enemySize*mult);
           }else if(n<2*height+width){
-            enemy = createSprite(width,Math.random() * height, this.enemySize*mult,this.enemySize*mult);
+            enemy = createSprite(width-20*mult,Math.random() * height, this.enemySize*mult,this.enemySize*mult);
           }else if(n<2*height+2*width){
-            enemy = createSprite(Math.random()*width,height, this.enemySize*mult,this.enemySize*mult);
+            enemy = createSprite(Math.random()*width,height-20*mult, this.enemySize*mult,this.enemySize*mult);
           }
           enemy.bounty = 75;
           let possibleEnemies = [];
