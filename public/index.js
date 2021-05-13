@@ -98,7 +98,9 @@ let upgradeIds = [
   "rightShot",
   "extraLife",
   "reviveTime",
-  "bulletSize"
+  "bulletSize",
+  "reloadSpeed",
+  "ammoAmount"
 ]
 
 function draw() {
@@ -111,6 +113,7 @@ function draw() {
     invMult = 1/gamestate.mult;
   }
   translate(width-jX-jW/2,jY+jH/2);
+
   if(gamestate.players){
     for(let key of Object.keys(gamestate.players)){
       if(gamestate.players[key].name===playerName){
@@ -140,13 +143,13 @@ function draw() {
     let upgrade2Amount = upgradeAmounts[upgradeIds.indexOf(gamestate.upgrades[2].id)];
     textSize(10*gsMult);
     if(!isNaN(upgrade0Amount)){
-      text("$"+1000*pow(4,upgrade0Amount),gamestate.width/2+90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
+      text("$"+1000*pow(2,upgrade0Amount),gamestate.width/2+90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
     }
     if(!isNaN(upgrade1Amount)){
-      text("$"+1000*pow(4,upgrade1Amount),gamestate.width/2-tx,gamestate.height/2+110*gsMult-ty);
+      text("$"+1000*pow(2,upgrade1Amount),gamestate.width/2-tx,gamestate.height/2+110*gsMult-ty);
     }
     if(!isNaN(upgrade2Amount)){
-      text("$"+1000*pow(4,upgrade2Amount),gamestate.width/2-90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
+      text("$"+1000*pow(2,upgrade2Amount),gamestate.width/2-90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
     }
   }
   if(gamestate.players){
