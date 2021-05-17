@@ -11,6 +11,17 @@ Run http-server -c-1 -p80 to start server on open port 80.
 
 */
 
+class upgrade{
+  constructor(id,val,desc,cost,title,maxLevel){
+    this.id = id;
+    this.val = val;
+    this.desc = desc;
+    this.cost = cost;
+    this.title = title;
+    this.maxLevel = maxLevel;
+  }
+}
+
 ////////////
 // Network Settings
 // const serverIp      = 'https://yourservername.herokuapp.com';
@@ -53,17 +64,6 @@ let upgrades = [
   new upgrade("reloadSpeed","1.5","Increases your reload speed by 50%","1000","Reload\nSpeed"),
   new upgrade("ammoAmount","1.5","Increases the amount of ammo per reload by 50%","1000","Ammo\nAmount")
 ];
-
-class upgrade{
-  constructor(id,val,desc,cost,title,maxLevel){
-    this.id = id;
-    this.val = val;
-    this.desc = desc;
-    this.cost = cost;
-    this.title = title;
-    this.maxLevel = maxLevel;
-  }
-}
 
 function updateStats(data){
   if(data){

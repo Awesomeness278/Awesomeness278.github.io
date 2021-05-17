@@ -7,6 +7,7 @@ let roomId          = null;
 let id              = null;
 let col;
 let playerName;
+//let serverIp = "https://gameserver3.tylerbalota.repl.co"
 
 // Process URL
 // Used to process the room ID. In order to specify a room ID,
