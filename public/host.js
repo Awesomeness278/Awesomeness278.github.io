@@ -394,19 +394,7 @@ class Game {
       reloadSpeed:1,
       ammoAmount:10
     };
-    this.players[id].upgradeAmounts = [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
+    this.players[id].upgradeAmounts = Array.from({length:upgrades.length},()=>(0)).slice();
     this.players[id].draw = function() {
       fill(this.shapeColor);
       ellipseMode(CENTER);
@@ -455,19 +443,7 @@ class Game {
           reloadSpeed:1,
           ammoAmount:10
         };
-        this.players[k].upgradeAmounts = [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ]
+        this.players[k].upgradeAmounts = Array.from({length:upgrades.length},()=>(0)).slice();
       }
     }
     if(this.enemies.size()===0){
