@@ -6,6 +6,7 @@ let socket;
 let roomId          = null;
 let id              = null;
 let col;
+let private;
 let playerName;
 //let serverIp = "https://gameserver3.tylerbalota.repl.co"
 
@@ -14,13 +15,14 @@ let playerName;
 // include ?=uniqueName, where uniqueName is replaced with the 
 // desired unique room ID.
 function _processUrl(host) {
-  const parameters = location.search.substring(1).split("&");
 
-  const temp = parameters[0].split("=");
-  roomId = unescape(temp[1]);
+  let temp = location.href.split("?")[1].split("=").slice(1,location.href.split("?")[1].split("=").length);
+  roomId = unescape(temp[0]);
   if(!host){
-    col = JSON.parse(temp[2]);
-    playerName = unescape(temp[3]);
+    col = JSON.parse(temp[1]);
+    playerName = unescape(temp[2]);
+  }else{
+    private = unescape(temp[1])==="private"
   }
   print(temp);
 

@@ -98,7 +98,8 @@ function sendStats(){
 function sendTimestamp(key){
   let r = database.ref("stats/"+key);
   let data = {
-    timestamp:Date.now()
+    timestamp:Date.now(),
+    private:private
   }
   r.set(data);
 }
