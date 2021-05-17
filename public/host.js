@@ -41,18 +41,29 @@ let enemySpeed = 1;
 let numDeaths = 0;
 let enemySpeedMultiplier = 1.05;
 let upgrades = [
-  {id:"speed",val:"1.3",desc:"Increases your speed by 30%",cost:"1000",title:"Extra\nSpeed"},
-  {id:"shot",val:"1",desc:"Shoots an extra bullet forward",cost:"1000",title:"Extra\nShot"},
-  {id:"backwardsShot",val:"1",desc:"Shoots an extra bullet backwards",cost:"1000",title:"Backwards\nShot"},
-  {id:"angleShot",val:"1",desc:"Shoots an extra bullet forward with an angle",cost:"1000",title:"Angled\nShot"},
-  {id:"leftShot",val:"1",desc:"Shoots an extra bullet to the left of where you aim",cost:"1000",title:"Left\nShot"},
-  {id:"rightShot",val:"1",desc:"Shoots an extra bullet to the right of where you aim",cost:"1000",title:"Right\nShot"},
-  {id:"extraLife",val:"1",desc:"Adds an extra life",cost:"1000",title:"Extra\nLife"},
-  {id:"reviveTime",val:"1.5",desc:"Increases the speed at which you revive friends by 50%",cost:"1000",title:"Revive\nSpeed"},
-  {id:"bulletSize",val:"2",desc:"Increases the bullet size by 2px",cost:"1000",title:"Bullet\nSize"},
-  {id:"reloadSpeed",val:"1.5",desc:"Increases your reload speed by 50%",cost:"1000",title:"Reload\nSpeed"},
-  {id:"ammoAmount",val:"1.5",desc:"Increases the amount of ammo per reload by 50%",cost:"1000",title:"Ammo\nAmount"}
-]
+  new upgrade("speed",1.3,"Increases your speed by 30%",1000,"Extra\Speed",Infinity),
+  new upgrade("shot",1,"Shoots an extra bullet forward","1000","Extra\nShot",Infinity),
+  new upgrade("backwardsShot",1,"Shoots an extra bullet backwards","1000","Backwards\nShot",Infinity),
+  new upgrade("angleShot","1","Shoots an extra bullet forward with an angle","1000","Angled\nShot"),
+  new upgrade("leftShot","1","Shoots an extra bullet to the left of where you aim","1000","Left\nShot"),
+  new upgrade("rightShot","1","Shoots an extra bullet to the right of where you aim","1000","Right\nShot"),
+  new upgrade("extraLife","1","Adds an extra life","1000","Extra\nLife"),
+  new upgrade("reviveTime","1.5","Increases the speed at which you revive friends by 50%","1000","Revive\nSpeed"),
+  new upgrade("bulletSize","2","Increases the bullet size by 2px","1000","Bullet\nSize"),
+  new upgrade("reloadSpeed","1.5","Increases your reload speed by 50%","1000","Reload\nSpeed"),
+  new upgrade("ammoAmount","1.5","Increases the amount of ammo per reload by 50%","1000","Ammo\nAmount")
+];
+
+class upgrade{
+  constructor(id,val,desc,cost,title,maxLevel){
+    this.id = id;
+    this.val = val;
+    this.desc = desc;
+    this.cost = cost;
+    this.title = title;
+    this.maxLevel = maxLevel;
+  }
+}
 
 function updateStats(data){
   if(data){
