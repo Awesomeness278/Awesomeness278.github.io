@@ -24,7 +24,7 @@ function isMobileDevice() {
 };
 
 const mobile = isMobileDevice();
-const serverIp      = 'https://gameserver3.tylerbalota.repl.co/';
+const serverIp = 'https://legend-painted-aspen.glitch.me';
 const serverPort    = '3000';
 const local         = false;   // true if running locally, false
                               // if running on remote server
