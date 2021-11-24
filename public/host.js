@@ -151,7 +151,7 @@ function draw() {
     let e = [];
     let b = [];
     for(let k of Object.keys(game.players)){
-      p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:game.players[k].money,upgradeAmounts:game.players[k].upgradeAmounts}
+      p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:money,upgradeAmounts:game.players[k].upgradeAmounts}
     }
     for(let en = 0; en < game.enemies.length; en++){
       e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y,color:game.enemies[en].shapeColor});
@@ -379,7 +379,6 @@ class Game {
     this.players[id].scale = 1;
     this.players[id].mass = 1;
     this.players[id].name = "";
-    this.players[id].money = 0;
     this.players[id].ready = false;
     this.players[id].lives = 1;
     this.players[id].reloadTimer = 0;
@@ -439,8 +438,8 @@ class Game {
       this.round = -1;
       enemySpeed = 1/enemySpeedMultiplier;
       this.enemies.removeSprites();
+      money = 0;
       for(let k of Object.keys(this.players)){
-        this.players[k].money = 0;
         this.players[k].stats = {
           speed:1,
           bulletNumForward:1,
@@ -656,12 +655,11 @@ class Game {
     this.enemies.draw();
     drawSprites();
   }
-
   getUpgrade(playerID,upgradeID,upgradeValue,upgradeCost,upgradeIndex,upgradeListIndex){
     upgradeValue*=1;
     let player = this.players[playerID];
-    if(player.money>=upgradeCost*pow(2,player.upgradeAmounts[upgradeListIndex])){
-      player.money-=upgradeCost*pow(2,player.upgradeAmounts[upgradeListIndex]);
+    if(money>=upgradeCost*pow(2,player.upgradeAmounts[upgradeListIndex])){
+      money-=upgradeCost*pow(2,player.upgradeAmounts[upgradeListIndex]);
       player.upgradeAmounts[upgradeListIndex]++;
       if(upgradeID==undefined){
         return;
@@ -695,7 +693,7 @@ class Game {
   hitEnemy(enemy, bullet) {
     enemy.hp--;
     if(enemy.hp<=0){
-      game.players[bullet.owner].money+=enemy.bounty;
+      money+=enemy.bounty;
       enemy.remove();
     }
     bullet.remove();
@@ -802,7 +800,7 @@ class Game {
     }
   }
 }
-
+let money = 0;
 // A simple pair of classes for generating ripples
 class Ripples {
   constructor() {
