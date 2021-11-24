@@ -559,7 +559,6 @@ class Game {
         this.walls[w].overlap(this.bullets[b],this.hitWall);
       }
     }
-    //this.enemies.displace(this.enemies);
     this.enemies.collide(this.walls);
     this.checkBounds();
     if(!this.going){
