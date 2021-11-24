@@ -568,23 +568,17 @@ class Game {
           if(x>width/2+50*mult&&x<width/2+130*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
-              for(let k2 of Object.keys(this.players)){
-                this.getUpgrade(k2,this.upgrades[0].id,this.upgrades[0].val,this.upgrades[0].cost,0,upgrades.indexOf(this.upgrades[0]));
-              }
+              this.getUpgrade(this.upgrades[0].id,this.upgrades[0].val,this.upgrades[0].cost,0,upgrades.indexOf(this.upgrades[0]));
             }
           }else if(x>width/2-40*mult&&x<width/2+40*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
-              for(let k2 of Object.keys(this.players)){
-                this.getUpgrade(k2,this.upgrades[1].id,this.upgrades[1].val,this.upgrades[1].cost,1,upgrades.indexOf(this.upgrades[1]));
-              }
+              this.getUpgrade(this.upgrades[1].id,this.upgrades[1].val,this.upgrades[1].cost,1,upgrades.indexOf(this.upgrades[1]));
             }
           }else if(x>width/2-130*mult&&x<width/2-50*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
-              for(let k2 of Object.keys(this.players)){
-                this.getUpgrade(k2,this.upgrades[2].id,this.upgrades[2].val,this.upgrades[2].cost,2,upgrades.indexOf(this.upgrades[2]));
-              }
+              this.getUpgrade(this.upgrades[2].id,this.upgrades[2].val,this.upgrades[2].cost,2,upgrades.indexOf(this.upgrades[2]));
             }
           }else{
             this.players[k].upgradeTimer = 3;
@@ -634,36 +628,39 @@ class Game {
     this.enemies.draw();
     drawSprites();
   }
-  getUpgrade(playerID,upgradeID,upgradeValue,upgradeCost,upgradeIndex,upgradeListIndex){
+  getUpgrade(upgradeID,upgradeValue,upgradeCost,upgradeIndex,upgradeListIndex){
     upgradeValue*=1;
-    let player = this.players[playerID];
-    if(money>=upgradeCost*pow(2,player.upgradeAmounts[upgradeListIndex])){
-      money-=upgradeCost*pow(2,player.upgradeAmounts[upgradeListIndex]);
-      player.upgradeAmounts[upgradeListIndex]++;
-      if(upgradeID==undefined){
-        return;
-      }else if(upgradeID==="speed"){
-        player.stats.speed*=upgradeValue;
-      }else if(upgradeID==="extraLife"){
-        player.stats.lives+=upgradeValue;
-      }else if(upgradeID==="bulletSize"){
-        player.stats.bulletSize+=upgradeValue;
-      }else if(upgradeID==="backwardsShot"){
-        player.stats.bulletNumBackward+=upgradeValue;
-      }else if(upgradeID==="shot"){
-        player.stats.bulletNumForward+=upgradeValue;
-      }else if(upgradeID==="leftShot"){
-        player.stats.bulletNumLeft+=upgradeValue;
-      }else if(upgradeID==="rightShot"){
-        player.stats.bulletNumRight+=upgradeValue;
-      }else if(upgradeID==="angleShot"){
-        player.stats.angledBullets+=upgradeValue;
-      }else if(upgradeID==="reviveTime"){
-        player.stats.reviveTime*=upgradeValue;
-      }else if(upgradeID==="ammoAmount"){
-        player.stats.ammoAmount*=upgradeValue;
-      }else if(upgradeID==="reloadSpeed"){
-        player.stats.reloadSpeed*=upgradeValue;
+    let keys = Object.keys(this.players);
+    if(money>=upgradeCost*pow(2,this.players[keys[0]].upgradeAmounts[upgradeListIndex])){
+      money-=upgradeCost*pow(2,this.players[keys[0]].upgradeAmounts[upgradeListIndex]);
+      for(let playerID of keys){
+        let player = this.players[playerID];
+        player.upgradeAmounts[upgradeListIndex]++;
+        if(upgradeID==undefined){
+          return;
+        }else if(upgradeID==="speed"){
+          player.stats.speed*=upgradeValue;
+        }else if(upgradeID==="extraLife"){
+          player.stats.lives+=upgradeValue;
+        }else if(upgradeID==="bulletSize"){
+          player.stats.bulletSize+=upgradeValue;
+        }else if(upgradeID==="backwardsShot"){
+          player.stats.bulletNumBackward+=upgradeValue;
+        }else if(upgradeID==="shot"){
+          player.stats.bulletNumForward+=upgradeValue;
+        }else if(upgradeID==="leftShot"){
+          player.stats.bulletNumLeft+=upgradeValue;
+        }else if(upgradeID==="rightShot"){
+          player.stats.bulletNumRight+=upgradeValue;
+        }else if(upgradeID==="angleShot"){
+          player.stats.angledBullets+=upgradeValue;
+        }else if(upgradeID==="reviveTime"){
+          player.stats.reviveTime*=upgradeValue;
+        }else if(upgradeID==="ammoAmount"){
+          player.stats.ammoAmount*=upgradeValue;
+        }else if(upgradeID==="reloadSpeed"){
+          player.stats.reloadSpeed*=upgradeValue;
+        }
       }
       this.upgrades[upgradeIndex] = {title:"Empty",cost:0,id:undefined}
     }
