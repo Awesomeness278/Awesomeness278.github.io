@@ -1,15 +1,3 @@
-/*
-p5.multiplayer - HOST
-
-This 'host' sketch is intended to be run in desktop browsers. 
-It connects to a node server via socket.io, from which it receives
-rerouted input data from all connected 'clients'.
-
-Navigate to the project's 'public' directory.
-Run http-server -c-1 to start server. This will default to port 8080.
-Run http-server -c-1 -p80 to start server on open port 80.
-*/
-
 class upgrade{
   constructor(id,val,desc,cost,title,maxLevel){
     this.id = id;
@@ -20,11 +8,6 @@ class upgrade{
     this.maxLevel = maxLevel;
   }
 }
-
-////////////
-// Network Settings
-// const serverIp      = 'https://yourservername.herokuapp.com';
-// const serverIp      = 'https://yourprojectname.glitch.me';
 
 var firebaseConfig = {
   apiKey: "AIzaSyAETaz7NpNCP8F72O1OtuSZP1Id700bIFw",
