@@ -8,7 +8,6 @@ rerouted input data from all connected 'clients'.
 Navigate to the project's 'public' directory.
 Run http-server -c-1 to start server. This will default to port 8080.
 Run http-server -c-1 -p80 to start server on open port 80.
-
 */
 
 class upgrade{
