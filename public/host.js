@@ -599,14 +599,14 @@ class Game {
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
               for(let k2 of Object.keys(this.players)){
-                this.getUpgrade(k,this.upgrades[1].id,this.upgrades[1].val,this.upgrades[1].cost,1,upgrades.indexOf(this.upgrades[1]));
+                this.getUpgrade(k2,this.upgrades[1].id,this.upgrades[1].val,this.upgrades[1].cost,1,upgrades.indexOf(this.upgrades[1]));
               }
             }
           }else if(x>width/2-130*mult&&x<width/2-50*mult){
             this.players[k].upgradeTimer-=deltaTime/1000;
             if(this.players[k].upgradeTimer<=0){
               for(let k2 of Object.keys(this.players)){
-                this.getUpgrade(k,this.upgrades[2].id,this.upgrades[2].val,this.upgrades[2].cost,2,upgrades.indexOf(this.upgrades[2]));
+                this.getUpgrade(k2,this.upgrades[2].id,this.upgrades[2].val,this.upgrades[2].cost,2,upgrades.indexOf(this.upgrades[2]));
               }
             }
           }else{
