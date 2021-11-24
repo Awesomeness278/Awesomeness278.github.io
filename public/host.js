@@ -130,7 +130,7 @@ function draw() {
     let e = [];
     let b = [];
     for(let k of Object.keys(game.players)){
-      p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:money,upgradeAmounts:game.players[k].upgradeAmounts}
+      p[k] = {x:game.players[k].position.x,y:game.players[k].position.y,name:game.players[k].name,dead:game.dead.indexOf(k)!==-1,money:money,upgradeAmounts:game.players[k].upgradeAmounts,col:game.players[k].color.levels}
     }
     for(let en = 0; en < game.enemies.length; en++){
       e.push({x:game.enemies[en].position.x,y:game.enemies[en].position.y,color:game.enemies[en].shapeColor});
