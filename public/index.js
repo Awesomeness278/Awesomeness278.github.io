@@ -110,7 +110,41 @@ function draw() {
   }
   push();
   translate(width-jX-jW/2,jY+jH/2);
-
+  pop();
+  if(connected){
+    let mx = mouseX;
+    let my = mouseY;
+    for(let t = 0; t < touches.length; t++){
+      let tx = touches[t].x;
+      let ty = touches[t].y;
+      if(tx>width-jX-jW&&ty>jY&&tx<width-jX&&ty<jY+jH){
+        mx = tx;
+        my = ty;
+        break;
+      }
+    }
+    fill(150,100,50);
+    stroke(playerColor);
+    strokeWeight(2);
+    rect(width-jX-jW,jY,jW,jH,10);
+    let rmx = mx-(width-jX-jW)-jW/2;
+    let rmy = my-jY-jH/2;
+    if(abs(rmx)<jW/2&&abs(rmy)<jH/2&&(mouseIsPressed||touches.length!==0)&&!mousePressed){
+      fill(playerColorDim);
+      circle(width-jX-jW+jW/2+rmx,jY+jH/2+rmy,20);
+      if(mouseIsPressed&&!mousePressed){
+        let mlt = 1/sqrt(rmx*rmx+rmy*rmy);
+        let data = {aimX:rmx*mlt,aimY:-rmy*mlt};
+        sendData('shoot',data);
+        mousePressed = true;
+      }
+      mousePressed = true;
+    }else if(!(abs(rmx)<jW/2&&abs(rmy)<jH/2&&(mouseIsPressed||touches.length!==0))){
+      mousePressed = false;
+    }
+  }
+  push();
+  translate(width-jX-jW/2,jY+jH/2);
   if(gamestate.players){
     for(let key of Object.keys(gamestate.players)){
       if(gamestate.players[key].name===playerName){
@@ -149,41 +183,6 @@ function draw() {
       text("$"+1000*pow(2,upgrade2Amount),gamestate.width/2-90*gsMult-tx,gamestate.height/2+110*gsMult-ty);
     }
   }
-  pop();
-  if(connected){
-    let mx = mouseX;
-    let my = mouseY;
-    for(let t = 0; t < touches.length; t++){
-      let tx = touches[t].x;
-      let ty = touches[t].y;
-      if(tx>width-jX-jW&&ty>jY&&tx<width-jX&&ty<jY+jH){
-        mx = tx;
-        my = ty;
-        break;
-      }
-    }
-    fill(150,100,50);
-    stroke(playerColor);
-    strokeWeight(2);
-    rect(width-jX-jW,jY,jW,jH,10);
-    let rmx = mx-(width-jX-jW)-jW/2;
-    let rmy = my-jY-jH/2;
-    if(abs(rmx)<jW/2&&abs(rmy)<jH/2&&(mouseIsPressed||touches.length!==0)&&!mousePressed){
-      fill(playerColorDim);
-      circle(width-jX-jW+jW/2+rmx,jY+jH/2+rmy,20);
-      if(mouseIsPressed&&!mousePressed){
-        let mlt = 1/sqrt(rmx*rmx+rmy*rmy);
-        let data = {aimX:rmx*mlt,aimY:-rmy*mlt};
-        sendData('shoot',data);
-        mousePressed = true;
-      }
-      mousePressed = true;
-    }else if(!(abs(rmx)<jW/2&&abs(rmy)<jH/2&&(mouseIsPressed||touches.length!==0))){
-      mousePressed = false;
-    }
-  }
-  push();
-  translate(width-jX-jW/2,jY+jH/2);
   if(gamestate.players){
     for(let key of Object.keys(gamestate.players)){
       if(gamestate.players[key].dead){
